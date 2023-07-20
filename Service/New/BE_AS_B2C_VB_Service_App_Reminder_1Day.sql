@@ -99,7 +99,7 @@ rol.City__c as OrderRole_City__c, /*Take address from Asset Location or Service 
 
 ass.Name as Assignment_Name, /*?*/
 ROW_NUMBER ( ) OVER ( PARTITION BY app.Id ORDER BY app.ActualStartTime ASC ) AS RowNumber, /*Start__c => ActualStartTime*/
-Dense_Rank() OVER (PARTITION BY acc.Id, rol.Street__c /*Take Street from Location*/, rol.MobilePhone__c /*Take mobile from Account*/, acc2.Email__c ORDER BY app.ActualStartTime /*Start__c => ActualStartTime*/ASC) AS AmountOfAppointments
+Dense_Rank() OVER (PARTITION BY acc.Id, loc.Street /*Take Street from Location*/, rol.MobilePhone__c /*Take mobile from Account*/, acc.Email__c ORDER BY app.ActualStartTime /*Start__c => ActualStartTime*/ASC) AS AmountOfAppointments
 
 
 FROM ENT.WorkOrder ord /*SCOrder__c to Work Order*/
