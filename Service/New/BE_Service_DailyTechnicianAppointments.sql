@@ -29,19 +29,18 @@ Contract_Util_templatedetails__c,
 
 OrderItem_ProductNameCalc__c,
 
-OrderRole_Account__c,
 Recipient_Id,
 Recipient_Email,
 Recipient_AccountNumber,
-OrderRole_Name1__c,
-OrderRole_Phone__c,
-OrderRole_MobilePhone__c,
-OrderRole_Street__c,
-OrderRole_HouseNo__c,
-OrderRole_Floor__c,
-OrderRole_FlatNo__c,
-OrderRole_PostalCode__c,
-OrderRole_City__c,
+Recipient_Name,
+Recipient_Phone,
+Recipient_MobilePhone__c,
+
+Location_Address,
+Location_Floor,
+Location_FlatNo,
+Location_PostalCode,
+Location_City,
 
 Resource_Id,
 Resource_Name,
@@ -70,8 +69,8 @@ app.Status as Appointment_AssignmentStatus__c, /*AssignmentStatus__c => Status*/
 
 ord.Id as Order_Order__c,
 ord.ServiceContractId as Order_Contract__c, /*Contract__c => ServiceContractId*/
-ord.Closed__c as Order_Closed__c,
-ord.InvoicingSubType__c as Order_InvoicingSubType__c,
+ord.Closed__c as Order_Closed__c, /*Closed__c => FSL_Service_Intervention_Date__c*/
+ord.InvoicingSubType__c as Order_InvoicingSubType__c, /*?*/
 
 CASE
 	WHEN acc.TemplateLanguage__c  = 'fr' /*LocaleSidKey__c => TemplateLanguage__c*/ 
@@ -85,15 +84,15 @@ CASE
                             replace(
                                 replace(
                                     replace(
-                                    ord.WorkTypeId,'5701','Service (réparation)' /*Type__c => WorkTypeId, check values*/
+                                    ord.WorkTypeId,'Repair','Service (réparation)' /*Type__c => WorkTypeId, check values*/
                                     )
                                 ,'5703','Vente'
                                 )
-                            ,'5705','Première verification'
+                            ,'1st Ignition','Première verification'
                             )
 						,'5706','Vente de pièces de rechange'
 						)
-					,'5707','Entretien'
+					,'Maintenance','Entretien'
 					)
 				,'5708','Note de crédit'
 				)
@@ -110,15 +109,15 @@ CASE
                             replace(
                                 replace(
                                     replace(
-                                    ord.WorkTypeId,'5701','Service reparatie' /*Type__c => WorkTypeId, check values*/
+                                    ord.WorkTypeId,'Repair','Service reparatie' /*Type__c => WorkTypeId, check values*/
                                     )
                                 ,'5703','Verkooporder'
                                 )
-                            ,'5705','Eerste nazicht'
+                            ,'1st Ignition','Eerste nazicht'
                             )
 						,'5706','Artikelverkoop service'
 						)
-					,'5707','Onderhoud'
+					,'Maintenance','Onderhoud'
 					)
 				,'5708','Kredietnota'
 				)
@@ -164,26 +163,24 @@ con.util_templatedetails__c as Contract_Util_templatedetails__c,
 ite.Id as OrderItem_Id,
 ite.ProductNameCalc__c as OrderItem_ProductNameCalc__c,
 
-rol.Account__c as OrderRole_Account__c,
-rol.OrderRole__c as OrderRole_OrderRole__c,
+acc2.Id as OrderRole_Account__c,
 acc2.Id as Recipient_Id,
 acc2.Email__c as Recipient_Email,
 acc2.AccountNumber as Recipient_AccountNumber,
-rol.Order__c as OrderRole_Order__c,
-rol.Name1__c as OrderRole_Name1__c,
+acc2.Name as Recipient_Name,
 case 
-	when left(rol.Phone__c,2) = '00'
+	when left(acc2.Phone,2) = '00' /*Phone__c => Phone, take from Recipient Account instead of OrderRole*/
 		then
-		replace(substring(rol.Phone__c,3,len(rol.Phone__c) - 2),' ','')
-	when left(rol.Phone__c,1) = '0'
+		replace(substring(acc2.Phone,3,len(acc2.Phone) - 2),' ','') /*Phone__c => Phone*/
+	when left(rol.Phone__c,1) = '0' /*Phone__c => Phone*/
 		then
-		replace(substring(rol.Phone__c,2,len(rol.Phone__c) - 1),' ','')
-	when left(rol.Phone__c,1) = '+'
+		replace(substring(acc2.Phone,2,len(acc2.Phone) - 1),' ','') /*Phone__c => Phone*/
+	when left(acc2.Phone,1) = '+' /*Phone__c => Phone*/
 		then
-		replace(substring(rol.Phone__c,2,len(rol.Phone__c) - 1),' ','')
+		replace(substring(acc2.Phone,2,len(acc2.Phone) - 1),' ','') /*Phone__c => Phone*/
 	else
-		rol.Phone__c
-end as OrderRole_Phone__c,
+		acc2.Phone /*Phone__c => Phone*/
+end as Recipient_Phone,
 case 
 	when left(rol.MobilePhone__c,2) = '00'
 		then
@@ -196,48 +193,43 @@ case
 		replace(substring(rol.MobilePhone__c,2,len(rol.MobilePhone__c) - 1),' ','')
 	else
 		rol.MobilePhone__c
-end as OrderRole_MobilePhone__c,
-/*rol.MobilePhone__c as OrderRole_MobilePhone__c,*/
-/*rol.Phone__c as OrderRole_Phone__c,*/
-rol.Street__c as OrderRole_Street__c,
-rol.HouseNo__c as OrderRole_HouseNo__c,
-rol.Floor__c as OrderRole_Floor__c,
-rol.FlatNo__c as OrderRole_FlatNo__c,
-rol.PostalCode__c as OrderRole_PostalCode__c,
-rol.City__c as OrderRole_City__c,
+end as Recipient_MobilePhone__c,
+loc.Address as Location_Address, /*OrderRole object => Location object, Street__c => Address, contains street name + house no*/
+loc.Floor as Location_Floor, /*OrderRole object => Location object, Floor__c => Floor*/
+loc.FlatNo as Location_FlatNo, /*OrderRole object => Location object, FlatNo__c => FlatNo*/
+loc.PostalCode as Location_PostalCode, /*OrderRole object => Location object, PostalCode__c => PostalCode*/
+loc.City as Location_City, /*OrderRole object => Location object, City__c => City*/
 
 res.Id as Resource_Id,
-res.Account__c as Resource_Account__c,
+res.AccountID as Resource_Account__c,
 res.Name as Resource_Name,
 res.FirstName__c as Resource_FirstName__c,
 res.LastName__c as Resource_LastName__c,
 res.EMail__c as Resource_EMail__c,
 
 acc.PersonContactId as SubscriberKey,
-acc.LocaleSidKey__c as Account_LocaleSidKey__c,
+acc.TemplateLanguage__c as Account_LocaleSidKey__c, /*LocaleSidkey__c => TemplateLanguage__c*/
 
-ass.Name as Assignment_Name,
-ROW_NUMBER ( ) OVER ( PARTITION BY app.Id ORDER BY app.Start__c ASC ) AS RowNumber
+ass.Name as Assignment_Name, /*Will 'OA-XXXXXXX' stay?*/
+ROW_NUMBER ( ) OVER ( PARTITION BY app.Id ORDER BY app.ActualStartTime ASC ) AS RowNumber /*Start__c => ActualStartTime*/
 
 FROM ENT.WorkOrder ord /*SCOrder__c => Work Order*/
 
 INNER JOIN ENT.ServiceAppointment app on ord.Id = app.ParentRecordId /*Order__c => ParentRecordId*/
-INNER JOIN ENT.SCResource__c_Salesforce_3 res on app.Resource__c = res.Id
-INNER JOIN ENT.SCOrderItem__c_Salesforce_4 ite on app.OrderItem__c = ite.Id
-INNER JOIN ENT.SCOrderRole__c_Salesforce_2 rol on app.Order__c = rol.Order__c
+INNER JOIN ENT.Asset asset on asset.Id = ord.AssetId 
 LEFT JOIN ENT.ServiceContract con on ord.ServiceContractId = con.Id /*Contract__c => ServiceContractId*/
-LEFT JOIN ENT.Account acc on res.AccountId = acc.Id /*Account object for technician info, res.Account__c => res.AccountId */
+LEFT JOIN ENT.Account acc on res.AccountID = acc.Id /*Account object for technician info, res.Account__c => res.AccountID */
 LEFT JOIN ENT.Account acc2 on ord.Account = acc2.Id /*Account object for recipient info*/
-LEFT JOIN ENT.SCAssignment__c_Salesforce_2 ass on ord.Id = ass.Order__c
+LEFT JOIN ENT.Assigned Resource ass on app.Id = ass.ServiceAppointment /*SCAssignment => Assigned Resource object*/
+INNER JOIN ENT.Service Resource res on ass.ServiceResource = res.Id
 
 WHERE
 
 convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.ActualStartTime) /*Start__c => ActualStartTime*/
 AND app.Country = 'BE' /*Country__c => Country*/
 AND res.Name NOT LIKE 'Dummy%'
-AND ord.Status__c IN ('5502', '5503', '5509', '5510') /*Status__c => Status, check values see Excel*/
-/* AND rol.OrderRole__c = '50301' /*Maybe free to delete*/ */
-AND app.AssignmentStatus__c != '5507' /*AssignmentStatus__c => Status, check values ee Excel*/
+AND ord.Status = 'In Progress' /*Status__c => Status, old values ('5502', '5503', '5509', '5510') all become 'In Progress' value, check Excel mapping field*/
+AND app.Status != '5507' /*AssignmentStatus__c => Status, check values ee Excel*/
 
 ORDER BY app.Start__c ASC
 

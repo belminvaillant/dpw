@@ -16,19 +16,15 @@ CASE
 END as CommunicatedTimeWindow,
 EndTime,
 Appointment_AssignmentStatus__c,
-Order_Type__c,
 Order_Closed__c,
 Order_Description__c,
 Order_CustomerTimeWindow__c,
-TimeWindow,
 Order_InvoicingSubType__c,
 Order_Status__c,
 Asset_BrandName,
-
 Contract_IdExt__c,
 Contract_Frame__c,
 InScope,
-
 OrderRole_Account__c,
 OrderRole_LocaleSidKey__c,
 Recipient_Id,
@@ -60,91 +56,10 @@ app.Status as Appointment_AssignmentStatus__c, /*AssignmentStatus__c => Status*/
 
 ord.Id as Order_Order__c, /*OK*/
 ord.ServiceContractId as Order_Contract__c,/*Contract__c => ServiceContractId*/
-
-CASE
-	WHEN acc.TemplateLanguage__c  = 'fr' /*LocaleSidKey__c => TemplateLanguage__c*/
-	THEN
-		/*Translation Fr*/
-		replace(
-			replace(
-				replace(
-					replace(
-						replace(
-                            replace(
-                                replace(
-                                    replace(
-                                    ord.WorkTypeId,'5701','Service (réparation)' /*Type__c => WorkTypeId, check values*/
-                                    )
-                                ,'5703','Vente'
-                                )
-                            ,'5705','Première verification'
-                            )
-						,'5706','Vente de pièces de rechange'
-						)
-					,'5707','Entretien'
-					)
-				,'5708','Note de crédit'
-				)
-			,'5709','Invoice copy'
-			)
-		,'5711','Facture de contrat') 
-	ELSE
-		/*Translation NL*/
-		replace(
-			replace(
-				replace(
-					replace(
-						replace(
-                            replace(
-                                replace(
-                                    replace(
-                                    ord.WorkTypeId,'5701','Service reparatie' /*Type__c => WorkTypeId, check values*/
-                                    )
-                                ,'5703','Verkooporder'
-                                )
-                            ,'5705','Eerste nazicht'
-                            )
-						,'5706','Artikelverkoop service'
-						)
-					,'5707','Onderhoud'
-					)
-				,'5708','Kredietnota'
-				)
-			,'5709','Factuur kopie'
-			)
-		,'5711','Factuur standaard contract') 
-END
-as Order_Type__c,
-
 ord.Description as Order_Description__c, /*Description__c => Description*/
 ord.CustomerTimeWindow__c as Order_CustomerTimeWindow__c, /*?*/
-
-CASE
-	WHEN acc.TemplateLanguage__c IN ('fr', 'nl') /*LocaleSidKey__c => TemplateLanguage__c*/
-	THEN
-		replace(
-			replace(
-				replace(
-					replace(
-						replace(
-							replace(
-							ord.CustomerTimewindow__c,'12401','AT' /*?*/
-							)
-						,'12402','FC'
-						)
-					,'12403','LC'
-					)
-				,'12404','AM'
-				)
-			,'12405','PM'
-			)
-		,'12409','AT')
-	ELSE ord.CustomerTimeWindow__c /*?*/
-END
-as TimeWindow,
-
-ord.Status as Order_Status__c, /*Status__c => Status, check values*/
-ib.Brand__c as Asset_BrandName, /*Order: Brand__c => Location: Brand__c, values: Bulex => 0E, Vaillant => 0A, Saunier Duval => 0B*/
+ord.Status as Order_Status__c, /*Status__c => Status*/
+asset.Brand__c as Asset_BrandName, /*Order: Brand__c => Asset: Brand__c, values: Bulex => 0E, Vaillant => 0A, Saunier Duval => 0B*/
 
 con.Id as Contract_Id,
 con.IdExt__c as Contract_IdExt__c, /*?*/
@@ -160,7 +75,7 @@ acc.Id as Recipient_Id, /*OK*/
 acc.Email__c as Recipient_Email, /*OK*/
 acc.AccountNumber as Recipient_AccountNumber, /*OK*/
 acc.TemplateLanguage__c as Recipient_Language, /*LocaleSidKey__c => TemplateLanguage__c*/
-rol.OrderRole__c as OrderRole_OrderRole__c, /*Maybe free to delete*/
+/*rol.OrderRole__c as OrderRole_OrderRole__c, /*Maybe free to delete*/*/
 acc.Name as Account_Name, /*OrderRole: Name => Account: Name, take name from Account*/
 case 
 	when left(rol.MobilePhone__c,2) = '00' /*Take from Account*/
@@ -193,7 +108,7 @@ INNER JOIN ENT.ServiceAppointment app on ord.Id = app.ParentRecordId /*Order__c 
 LEFT JOIN ENT.ServiceContract con on ord.ServiceContractId = con.Id /*Contract__c => ServiceContractId*/
 LEFT JOIN ENT.Account acc on ord.AccountId = acc.Id /*We take recipient info from Account object instead of OrderRole object, Account__c => Work Order: AccountId*/
 LEFT JOIN ENT.SCAssignment__c_Salesforce_2 ass on ord.Id = ass.Order__c
-LEFT JOIN ENT.Asset asset on ass.Id = loc.InstalledBase__c /*SCInstalledBase__c => Asset, we take brand on Asset*/
+LEFT JOIN ENT.Asset asset on asset.Id = ord.AssetId /*SCInstalledBase__c => Asset, we take brand on Asset*/
 LEFT JOIN ENT.Location loc on ass.LocationId = loc.Id /*Linking the Location object to Asset, will get address info etc from Location instead of OrderRole object */
 
 WHERE
@@ -201,8 +116,7 @@ WHERE
 convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.ActualStartTime) /*Start__c => ActualStartTime*/
 AND app.Country = 'BE' /*Country__c => Country*/
 AND res.Name NOT LIKE 'Dummy%'
-AND ord.Status IN ('5502', '5503', '5509', '5510') /*Status__c => Status, check values see Excel*/
-/* AND rol.OrderRole__c = '50301' /*Maybe free to delete*/ */
+AND ord.Status = 'In Progress' /*Status__c => Status, old values ('5502', '5503', '5509', '5510') all become 'In Progress' value, check Excel mapping field*/
 AND app.Status != '5507' /*AssignmentStatus__c => Status, check values see Excel*/
 
 ORDER BY app.ActualStartTime ASC /*Start__c => ActualStartTime*/
