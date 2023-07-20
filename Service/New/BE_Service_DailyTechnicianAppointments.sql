@@ -62,19 +62,19 @@ app.Order__c as Appointment_Order__c,
 app.Country__c as Appointment_Country__c,
 app.Resource__c as Appointment_Resource__c,
 convert(varchar, app.End__c, 103) as StartDay,
-convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.Start__c))) as StartTime,
-convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.End__c))) as EndTime,
-app.Start__c as Appointment_Start__c,
-app.TimeWindow__c as Appointment_TimeWindow__c,
-app.AssignmentStatus__c as Appointment_AssignmentStatus__c,
+convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.ActualStartTime))) as StartTime, /*Start__c => ActualStartTime*/
+convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.ActualEndTime))) as EndTime, /*End__c = > ActualEndTime*/
+app.ActualStartTime as Appointment_Start__c, /*Start__c => ActualStartTime*/
+app.TimeWindow__c as Appointment_TimeWindow__c, /*If no direct field => Take ActualStart Time and ActualEndTime*/
+app.Status as Appointment_AssignmentStatus__c, /*AssignmentStatus__c => Status*/
 
 ord.Id as Order_Order__c,
-ord.Contract__c as Order_Contract__c,
+ord.ServiceContractId as Order_Contract__c, /*Contract__c => ServiceContractId*/
 ord.Closed__c as Order_Closed__c,
 ord.InvoicingSubType__c as Order_InvoicingSubType__c,
 
 CASE
-	WHEN acc.LocaleSidKey__c  = 'fr' 
+	WHEN acc.TemplateLanguage__c  = 'fr' /*LocaleSidKey__c => TemplateLanguage__c*/ 
 	THEN
 		/*Translation Fr*/
 		replace(
@@ -85,7 +85,7 @@ CASE
                             replace(
                                 replace(
                                     replace(
-                                    ord.Type__c,'5701','Service (réparation)'
+                                    ord.WorkTypeId,'5701','Service (réparation)' /*Type__c => WorkTypeId, check values*/
                                     )
                                 ,'5703','Vente'
                                 )
@@ -110,7 +110,7 @@ CASE
                             replace(
                                 replace(
                                     replace(
-                                    ord.Type__c,'5701','Service reparatie'
+                                    ord.WorkTypeId,'5701','Service reparatie' /*Type__c => WorkTypeId, check values*/
                                     )
                                 ,'5703','Verkooporder'
                                 )
@@ -128,11 +128,11 @@ CASE
 END
 as Order_Type__c,
 
-ord.Description__c as Order_Description__c,
+ord.Description as Order_Description__c, /*Description__c => Description*/
 ord.CustomerTimeWindow__c as Order_CustomerTimeWindow__c,
 
 CASE
-	WHEN acc.LocaleSidKey__c IN ('fr', 'nl')
+	WHEN acc.TemplateLanguage__c IN ('fr', 'nl') /*LocaleSidKey__c => TemplateLanguage__c*/
 	THEN
 		replace(
 			replace(
@@ -140,7 +140,7 @@ CASE
 					replace(
 						replace(
 							replace(
-							ord.CustomerTimewindow__c,'12401','AT'
+							ord.CustomerTimewindow__c,'12401','AT' /*?*/
 							)
 						,'12402','FC'
 						)
@@ -151,11 +151,11 @@ CASE
 			,'12405','PM'
 			)
 		,'12409','AT')
-	ELSE ord.CustomerTimeWindow__c
+	ELSE ord.CustomerTimeWindow__c /*?*/
 END
 as TimeWindow,
 
-ord.Status__c as Order_Status__c,
+ord.Status as Order_Status__c, /*Status__c => Status, check values*/
 
 con.Id as Contract_Id,
 con.Name as Contract_Name,

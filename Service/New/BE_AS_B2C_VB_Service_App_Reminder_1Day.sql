@@ -144,7 +144,7 @@ END
 as TimeWindow,
 
 ord.Status as Order_Status__c, /*Status__c => Status, check values*/
-loc.Brand__c as Asset_BrandName, /*Order: Brand__c => Location: Brand__c, values: Bulex => 0E, Vaillant => 0A, Saunier Duval => 0B*/
+ib.Brand__c as Asset_BrandName, /*Order: Brand__c => Location: Brand__c, values: Bulex => 0E, Vaillant => 0A, Saunier Duval => 0B*/
 
 con.Id as Contract_Id,
 con.IdExt__c as Contract_IdExt__c, /*?*/
@@ -191,19 +191,19 @@ FROM ENT.WorkOrder ord /*SCOrder__c to Work Order*/
 
 INNER JOIN ENT.ServiceAppointment app on ord.Id = app.ParentRecordId /*Order__c => ParentRecordId*/
 LEFT JOIN ENT.ServiceContract con on ord.ServiceContractId = con.Id /*Contract__c => ServiceContractId*/
-LEFT JOIN ENT.Account acc on ord.AccountId = acc.Id /*OrderRole: Account__c => Work Order: AccountId*/
+LEFT JOIN ENT.Account acc on ord.AccountId = acc.Id /*We take recipient info from Account object instead of OrderRole object, Account__c => Work Order: AccountId*/
 LEFT JOIN ENT.SCAssignment__c_Salesforce_2 ass on ord.Id = ass.Order__c
-LEFT JOIN ENT.Asset ib on ib.Id = ite.InstalledBase__c /*SCInstalledBase__c => Asset*/
-LEFT JOIN ENT.Location loc on ass.LocationId = loc.Id /*Linking the Location object to Asset, will get address info etc from Location*/
+LEFT JOIN ENT.Asset asset on ass.Id = loc.InstalledBase__c /*SCInstalledBase__c => Asset, we take brand on Asset*/
+LEFT JOIN ENT.Location loc on ass.LocationId = loc.Id /*Linking the Location object to Asset, will get address info etc from Location instead of OrderRole object */
 
 WHERE
 
 convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.ActualStartTime) /*Start__c => ActualStartTime*/
 AND app.Country = 'BE' /*Country__c => Country*/
 AND res.Name NOT LIKE 'Dummy%'
-AND ord.Status IN ('5502', '5503', '5509', '5510') /*Status__c => Status, check values*/
+AND ord.Status IN ('5502', '5503', '5509', '5510') /*Status__c => Status, check values see Excel*/
 AND rol.OrderRole__c = '50301' /*Maybe free to delete*/
-AND app.Status != '5507' /*AssignmentStatus__c => Status, check values*/
+AND app.Status != '5507' /*AssignmentStatus__c => Status, check values see Excel*/
 
 ORDER BY app.ActualStartTime ASC /*Start__c => ActualStartTime*/
 
