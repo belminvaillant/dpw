@@ -51,9 +51,9 @@ FROM
 app.Id as Appointment_Id,
 app.ParentRecordId as Appointment_Order__c, /*Order__c => ParentRecordId*/
 app.Country as Appointment_Country__c, /*Country__c => Country*/
-convert(varchar, app.End__c, 103) as StartDay,
+convert(varchar, app.ActualEndTime, 103) as StartDay, /*End__c = > ActualEndTime*/
 convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.ActualStartTime))) as StartTime, /*Start__c => ActualStartTime*/
-convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.End__c))) as EndTime, /*End__c => ActualStartTime*/
+convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.ActualEndTime))) as EndTime, /*End__c = > ActualEndTime*/
 app.ActualStartTime as Appointment_Start__c, /*Start__c => ActualStartTime*/
 app.TimeWindow__c as Appointment_TimeWindow__c, /*If no direct field => Take ActualStart Time and ActualEndTime*/
 app.Status as Appointment_AssignmentStatus__c, /*AssignmentStatus__c => Status*/
