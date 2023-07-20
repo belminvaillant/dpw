@@ -202,7 +202,7 @@ convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.ActualStar
 AND app.Country = 'BE' /*Country__c => Country*/
 AND res.Name NOT LIKE 'Dummy%'
 AND ord.Status IN ('5502', '5503', '5509', '5510') /*Status__c => Status, check values see Excel*/
-AND rol.OrderRole__c = '50301' /*Maybe free to delete*/
+/* AND rol.OrderRole__c = '50301' /*Maybe free to delete*/ */
 AND app.Status != '5507' /*AssignmentStatus__c => Status, check values see Excel*/
 
 ORDER BY app.ActualStartTime ASC /*Start__c => ActualStartTime*/

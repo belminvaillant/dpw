@@ -219,25 +219,25 @@ acc.LocaleSidKey__c as Account_LocaleSidKey__c,
 ass.Name as Assignment_Name,
 ROW_NUMBER ( ) OVER ( PARTITION BY app.Id ORDER BY app.Start__c ASC ) AS RowNumber
 
-FROM ENT.SCOrder__c_Salesforce_2 ord
+FROM ENT.WorkOrder ord /*SCOrder__c => Work Order*/
 
-INNER JOIN ENT.SCAppointment__c_Salesforce_2 app on ord.Id = app.Order__c
+INNER JOIN ENT.ServiceAppointment app on ord.Id = app.ParentRecordId /*Order__c => ParentRecordId*/
 INNER JOIN ENT.SCResource__c_Salesforce_3 res on app.Resource__c = res.Id
 INNER JOIN ENT.SCOrderItem__c_Salesforce_4 ite on app.OrderItem__c = ite.Id
 INNER JOIN ENT.SCOrderRole__c_Salesforce_2 rol on app.Order__c = rol.Order__c
-LEFT JOIN ENT.SCContract__c_Salesforce_5 con on ord.Contract__c = con.Id
-LEFT JOIN ENT.Account_Salesforce_2 acc on res.Account__c = acc.Id
-LEFT JOIN ENT.Account_Salesforce_2 acc2 on rol.Account__c = acc2.Id
+LEFT JOIN ENT.ServiceContract con on ord.ServiceContractId = con.Id /*Contract__c => ServiceContractId*/
+LEFT JOIN ENT.Account acc on res.AccountId = acc.Id /*Account object for technician info, res.Account__c => res.AccountId */
+LEFT JOIN ENT.Account acc2 on ord.Account = acc2.Id /*Account object for recipient info*/
 LEFT JOIN ENT.SCAssignment__c_Salesforce_2 ass on ord.Id = ass.Order__c
 
 WHERE
 
-convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.Start__c)
-AND app.Country__c = 'BE'
+convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.ActualStartTime) /*Start__c => ActualStartTime*/
+AND app.Country = 'BE' /*Country__c => Country*/
 AND res.Name NOT LIKE 'Dummy%'
-AND ord.Status__c IN ('5502', '5503', '5509', '5510')
-AND rol.OrderRole__c = '50301'
-AND app.AssignmentStatus__c != '5507'
+AND ord.Status__c IN ('5502', '5503', '5509', '5510') /*Status__c => Status, check values see Excel*/
+/* AND rol.OrderRole__c = '50301' /*Maybe free to delete*/ */
+AND app.AssignmentStatus__c != '5507' /*AssignmentStatus__c => Status, check values ee Excel*/
 
 ORDER BY app.Start__c ASC
 
