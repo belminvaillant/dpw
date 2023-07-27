@@ -74,28 +74,28 @@ acc.LocaleSidKey__c as PrefLanguage, /*LocaleSidKey__c => TemplateLanguage__c*/
 acc2.FirstName as SR_FirstName,
 acc2.LastName as SR_LastName,
 
-scc.Brand__c as Brand,
+scc.Brand__c as Brand, /*Doesn"t exist in FSL, take from Asset*/
 scc.DescriptionSpecialTerms__c as VAT_Value_Percent,
 scc.DescriptionInternal__c as Total_Price_EUR,
 scc.MaintenanceDuration__c as ContractDuration, /*tbv*/
 scc.util_MaintenanceDuration__c as ContractDuration_2, /*tbv*/
 scc.util_templatedetails__c as ContractType_NotTranslated,
 scc.Status as ContractStatus, /*Status__c => Status*/
-scc.StartDate__c as StartDate,
-datepart(day,scc.StartDate__c) as Start_Day,
-datepart(month,scc.StartDate__c) as Start_Month,
-datepart(year,scc.StartDate__c) as Start_Year,
+scc.StartDate__c as StartDate, /*StartDate__c => StartDate*/
+datepart(day,scc.StartDate) as Start_Day, /*StartDate__c => StartDate*/
+datepart(month,scc.StartDate) as Start_Month, /*StartDate__c => StartDate*/
+datepart(year,scc.StartDate) as Start_Year, /*StartDate__c => StartDate*/
 datepart(day,getdate()) as Today_D,
 datepart(month,getdate()) as Today_M,
 datepart(year,getdate()) as Today_Y,
 scc.OrderType__c as OrderType,
-scc.Runtime__c	as RunTime,
+scc.Term as RunTime, /*RunTime__c => Term*/
 scc.CreatedById as CreatedById,
 scc.ConclusionDate__c as ContractCreatedDate,
 scc.Id as Contract_Id,
 scc.LeadCreatorPartner__c as Contract_Lead_Creator_Partner,
 scc.ContractSeller__c as Contract_Salesrep_User,
-scc.AccountOwner__c as Contract_AccountOwner,
+scc.AccountOwner__c as Contract_AccountOwner, /*AccountOwner__c => AccountId, check if Account ID field is OK, if not => Service_Recipient__c or FSL_Payer__c?*/
 
 asset.InstallDate as Installatiedatum, /*InstallationDate__c => InstallDate*/
 asset.ProductNameCalc__c as ProductName, /*ProductNameCalc__c => Name*/
@@ -153,7 +153,7 @@ ROW_NUMBER ( ) OVER ( PARTITION BY scc.Id ORDER BY scc.Brand__c ASC ) AS RowNumb
 
 
 FROM ENT.Account_Salesforce_2 acc
-INNER JOIN ENT.ServiceContract scc on scc.AccountOwner__c = acc.id /*SCContract__c object to ServiceContract */
+INNER JOIN ENT.ServiceContract scc on scc.AccountId = acc.id /*SCContract__c object to ServiceContract */
 INNER JOIN ENT.SCContractItem__c_Salesforce_2 sci on sci.ServiceContractId = scc.id /*SCContractItem__c object to Service Contract Line Item*/
 INNER JOIN ENT.Asset asset on asset.id = sci.AssetId /*SCInstalledBase__c object to Asset*/
 INNER JOIN ENT.Location loc on loc.id = asset.LocationId
