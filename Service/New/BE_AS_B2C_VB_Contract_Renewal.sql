@@ -47,7 +47,7 @@ acc.PersonIndividualId as Individual_Id,
 acc.IsPersonAccount as IsPersonAccount,
 acc.PersonContactId as Person_Account_Id,
 acc.AccountNumber as Account_Number,
-acc.LocaleSidKey__c as LocaleSidKey__c, --> acc.TemplateLanguage__c as Account_Language
+acc.TemplateLanguage__c as Recipient_Language, /*LocaleSidKey__c => TemplateLanguage__c*/
 acc.Mobile__c as Account_Mobile,
 acc.Phone as Account_Phone,
 acc.Email__c as Account_Email,
