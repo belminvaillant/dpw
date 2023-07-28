@@ -40,17 +40,17 @@ ProductUnitClass
 FROM(
 
 SELECT
-ir.Id as Account_Id,  /*OK*/
-sr.Id as Service_Recipient, /*OK*/
-ir.Id as Invoice_Recipient,  /*OK*/
-ir.IsDeleted as Account_DeleteStatus,  /*DeleteStatus__c => IsDeleted*/
-ir.Name as Account_Name, /*OK*/
-ir.PersonIndividualId as Individual_Id, /*OK*/
-ir.IsPersonAccount as IsPersonAccount, /*OK*/
-ir.PersonContactId as Person_Account_Id, /*OK*/
-ir.AccountNumber as Account_Number, /*OK*/
-ir.TemplateLanguage__c as Recipient_Language, /*LocaleSidKey__c => TemplateLanguage__c*/
-ir.Email__c as Account_Email,  /*OK*/
+ir.Id as Account_Id, 
+sr.Id as Service_Recipient, 
+ir.Id as Invoice_Recipient,  
+ir.IsDeleted as Account_DeleteStatus,  
+ir.Name as Account_Name, 
+ir.PersonIndividualId as Individual_Id, 
+ir.IsPersonAccount as IsPersonAccount, 
+ir.PersonContactId as Person_Account_Id, 
+ir.AccountNumber as Account_Number, 
+ir.TemplateLanguage__c as Recipient_Language, 
+ir.Email__c as Account_Email,  
 ir.PersonMobilePhone as Account_Phone,
 sr.BillingStreet__c as Billing_Street,
 sr.BillingHouseNo__c as Billing_HouseNo,
@@ -60,39 +60,37 @@ sr.BillingPostalCode__c as Billing_PostalCode,
 sr.BillingCity__c as Billing_City,
 sr.BillingCountry__c as Billing_Country,
   
-co.EndDate as Contract_EndDate, /*OK*/
-co.Name as Contract_Name, /*OK*/
-co.ContractNumber as Contract_Number, /*OK*/
-co.TemplateId__c as Contract_Template_Name, /*OK*/
-co.Status as Contract_Status, /*OK*/
-co.Term as Contract_Term_Months, /*OK*/
-  
-pb.Brand__c as Brand, /*OK*/
+co.EndDate as Contract_EndDate,
+co.Name as Contract_Name,
+co.ContractNumber as Contract_Number, 
+co.TemplateId__c as Contract_Template_Name, 
+co.Status as Contract_Status, 
+co.Term as Contract_Term_Months,
+co.FSL_Type_of_Contract__c as Contract_Type,
 
-prod.Name as Product_Name /*Which product name to put in the email?*/
-  
-ROW_NUMBER ( ) OVER ( PARTITION BY acc.PersonContactId ORDER BY acc.Name ASC ) AS RowNumber
+pb.Brand__c as Brand, 
 
+prod.Name as Product_Name 
 FROM ENT.ServiceContract_Salesforce_4 co
 
-INNER JOIN ENT.Account_Salesforce_21 sr on acc.Id = co.Service_Recipient__c
-INNER JOIN ENT.Account_Salesforce_21 ir on acc.Id = co.Invoice_Recipient__c
+INNER JOIN ENT.Account_Salesforce_21 sr on sr.Id = co.Service_Recipient__c
+INNER JOIN ENT.Account_Salesforce_21 ir on ir.Id = co.Invoice_Recipient__c
 INNER JOIN ENT.Pricebook2_Salesforce pb on pb.Id = co.Pricebook2Id
 INNER JOIN ENT.MaintenancePlan_Salesforce mp on co.Id = mp.ServiceContractId
 INNER JOIN ENT.MaintenanceAsset_Salesforce mass on mass.MaintenancePlanId = mp.Id
-INNER JOIN ENT.Asset_Salesforce_5 ass on mp.AssetId = ass.Id
-INNER JOIN ENT.Product2 prod on prod.id = ass.Product2Id
-/*INNER JOIN ENT.WorkOrder_Salesforce wo on wo. Needed? */
+INNER JOIN ENT.Asset_Salesforce_5 ass on mass.AssetId = ass.Id
+INNER JOIN ENT.Product2_Salesforce prod on prod.id = ass.Product2Id
 
 WHERE
-ir.DeleteStatus__c IS NULL  /*OK*/
-AND ir.PersonContactId <> '' /*OK*/
-AND ir.Email__c <> '' /*OK*/
+ir.IsDeleted = 'false' 
+AND ir.PersonContactId <> '' 
+AND ir.Email__c <> ''
 
-AND co.TemplateCountry__c = 'BE' /*OK*/
-AND co.Status = 'Active' /*OK*/
-AND co.FSL_Cancellation_Status__c	= '' /*OK*/
-AND co.EndDate = DateAdd(NOW(),m,2)
+AND co.TemplateCountry__c = 'BE' 
+AND co.Status = 'Active' 
+AND co.FSL_Cancellation_Status__c = '' 
+AND co.EndDate <= DateAdd(month, 2, getdate())
+
 AND co.TemplateId__c (Frame and Bulk)
 AND co.FSL_Type_of_Contract__c /* Needed? */  
 /* Do we need to exclude certain types of products?*/
