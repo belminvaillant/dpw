@@ -90,8 +90,8 @@ LEFT JOIN ENT.Account_Salesforce_21 acc on ord.AccountId = acc.Id
 LEFT JOIN ENT.Asset_Salesforce_5 asset on asset.Id = ord.AssetId 
 
 WHERE
-/*convert(int,dateadd(day,convert(float,getdate()), 0))=convert(int,app.FSL_Scheduled_Start__c)*/
-app.Country = 'Belgium'
+convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.FSL_Scheduled_Start__c)
+AND app.Country = 'Belgium'
 AND ord.Status = 'In Progress'
 AND acc.TemplateLanguage__c IN ('FR', 'NL')
 AND app.Status != 'Cancelled'
