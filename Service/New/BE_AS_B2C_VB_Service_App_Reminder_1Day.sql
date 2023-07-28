@@ -1,127 +1,102 @@
 SELECT
-AmountOfAppointments,
 Appointment_Id,
-Appointment_Order__c,
-Appointment_TimeWindow__c,
-StartDay,
-StartTime,
+Appointment_Country,
+test,
+Appointment_StartDay, 
+Appointment_StartTime,
+Appointment_EndTime,
 CASE
-    WHEN (OrderRole_LocaleSidKey__c = 'nl' AND (StartTime >= '00:00' AND StartTime <= '10:59')) THEN '07u30 en 12u'
-    WHEN (OrderRole_LocaleSidKey__c = 'nl' AND (StartTime >= '11:00' AND StartTime <= '12:59')) THEN '10u en 14u'
-    WHEN (OrderRole_LocaleSidKey__c = 'nl' AND (StartTime >= '13:00' AND StartTime <= '23:59')) THEN '13u en 18u'
-    WHEN (OrderRole_LocaleSidKey__c = 'fr' AND (StartTime >= '00:00' AND StartTime <= '10:59')) THEN '07h30 et 12h'
-    WHEN (OrderRole_LocaleSidKey__c = 'fr' AND (StartTime >= '11:00' AND StartTime <= '12:59')) THEN '10h et 14h'
-    WHEN (OrderRole_LocaleSidKey__c = 'fr' AND (StartTime >= '13:00' AND StartTime <= '23:59')) THEN '13h et 18h'
-    ELSE StartTime
+    WHEN (Recipient_Language = 'NL' AND (Appointment_StartTime >= '00:00' AND Appointment_StartTime <= '10:59')) THEN '07u30 en 12u'
+    WHEN (Recipient_Language = 'NL' AND (Appointment_StartTime >= '11:00' AND Appointment_StartTime <= '12:59')) THEN '10u en 14u'
+    WHEN (Recipient_Language = 'NL' AND (Appointment_StartTime >= '13:00' AND Appointment_StartTime <= '23:59')) THEN '13u en 18u'
+    WHEN (Recipient_Language = 'FR' AND (Appointment_StartTime >= '00:00' AND Appointment_StartTime <= '10:59')) THEN '07h30 et 12h'
+    WHEN (Recipient_Language = 'FR' AND (Appointment_StartTime >= '11:00' AND Appointment_StartTime <= '12:59')) THEN '10h et 14h'
+    WHEN (Recipient_Language = 'FR' AND (Appointment_StartTime >= '13:00' AND Appointment_StartTime <= '23:59')) THEN '13h et 18h'
+    ELSE Appointment_StartTime
 END as CommunicatedTimeWindow,
-EndTime,
-Appointment_AssignmentStatus__c,
-Order_Closed__c,
-Order_Description__c,
-Order_CustomerTimeWindow__c,
-Order_InvoicingSubType__c,
-Order_Status__c,
-Asset_BrandName,
-Contract_IdExt__c,
-Contract_Frame__c,
-InScope,
-OrderRole_Account__c,
-OrderRole_LocaleSidKey__c,
+Appointment_Status, 
+Appointment_Street,
+Appointment_City,
+Appointment_PostalCode,
+
+Order_Id,
+Order_AssetId,
+Order_AccountId,
+Order_ContractId,
+Order_Status,
+
+Contract_Id,
+
 Recipient_Id,
-Recipient_Email,
+Recipient_PersonAccount,
+Recipient_FirstName,
+Recipient_LastName,
+Recipient_Email, 
 Recipient_AccountNumber,
 Recipient_Language,
-OrderRole_Name1__c,
-OrderRole_MobilePhone__c,
-OrderRole_Street__c,
-OrderRole_HouseNo__c,
-OrderRole_Floor__c,
-OrderRole_FlatNo__c,
-OrderRole_PostalCode__c,
-OrderRole_City__c,
+Recipient_MobilePhone,
 
-Assignment_Name
+Asset_Brand,
+
+RowNumber
 
 FROM 
 (SELECT TOP 5000
-app.Id as Appointment_Id,
-app.FSL_Work_Order__c as Appointment_Order__c, /*Order__c => FSL_Work_Order__c*/
-app.Country as Appointment_Country__c, /*Country__c => Country*/
-convert(varchar, app.FSL_Scheduled_End__c, 103) as StartDay, /*End__c = > ActualEndTime*/
-convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.FSL_Scheduled_Start__c))) as StartTime, /*Start__c => FSL_Scheduled_Start__c*/
-convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.FSL_Scheduled_End__c))) as EndTime, /*End__c = > ActualEndTime*/
-app.FSL_Scheduled_Start__c as Appointment_Start__c, /*Start__c => FSL_Scheduled_Start__c*/
-app.TimeWindow__c as Appointment_TimeWindow__c, /*If no direct field => Take ActualStart Time and ActualEndTime*/
-app.Status as Appointment_AssignmentStatus__c, /*AssignmentStatus__c => Status*/
 
-ord.Id as Order_Order__c, /*OK*/
-ord.ServiceContractId as Order_Contract__c,/*Contract__c => ServiceContractId*/
-ord.Description as Order_Description__c, /*Description__c => Description*/
-ord.CustomerTimeWindow__c as Order_CustomerTimeWindow__c, /*?*/
-ord.Status as Order_Status__c, /*Status__c => Status*/
-asset.Brand__c as Asset_BrandName, /*Order: Brand__c => Asset: Brand__c, values: Bulex => 0E, Vaillant => 0A, Saunier Duval => 0B*/
+app.Id as Appointment_Id,
+app.Country as Appointment_Country,
+app.FSL_Scheduled_Start__c as test,
+convert(varchar, app.FSL_Scheduled_Start__c, 103) as Appointment_StartDay, 
+convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.FSL_Scheduled_Start__c))) as Appointment_StartTime,
+convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.FSL_Scheduled_End__c))) as Appointment_EndTime,
+app.Status as Appointment_Status, 
+app.Street as Appointment_Street,
+app.City as Appointment_City,
+app.PostalCode as Appointment_PostalCode,
+
+ord.Id as Order_Id,
+ord.AssetId as Order_AssetId,
+ord.AccountId as Order_AccountId,
+ord.ServiceContractId as Order_ContractId,
+ord.Status as Order_Status,
 
 con.Id as Contract_Id,
-con.IdExt__c as Contract_IdExt__c, /*?*/
-con.Frame__c as Contract_Frame__c, /*?*/
+
+/*To be checked with Gwenn & Jan
+con.Frame__c as Contract_Frame__c,
 
 CASE 
-    WHEN (con.Frame__c IN ('a0C1r00003pBl9xEAC', 'a0C1r00003pBn8fEAC', 'a0C1r00003pBnc1EAC', 'a0C1r00003pAp8fEAC', 'a0C1r000042mBBuEAM', 'a0C6900004FDg8cEAD', 'a0C1r000043BCxWEAW', 'a0C1r00004AWdHDEA1', 'a0C69000048JyyFEAS', 'a0C6900004NgIJoEAN', 'a0C1r00003w47NVEAY', 'a0Cw000001GNm6qEAD', 'a0C6900004O0WqtEAF', 'a0C6900004DiveKEAR', 'a0C1r00003xRltxEAC')) THEN 'False'  /*?*/
-    WHEN (con.Name IS NULL) THEN 'False' /*?*/
+    WHEN (con.Frame__c IN ('a0C1r00003pBl9xEAC', 'a0C1r00003pBn8fEAC', 'a0C1r00003pBnc1EAC', 'a0C1r00003pAp8fEAC', 'a0C1r000042mBBuEAM', 'a0C6900004FDg8cEAD', 'a0C1r000043BCxWEAW', 'a0C1r00004AWdHDEA1', 'a0C69000048JyyFEAS', 'a0C6900004NgIJoEAN', 'a0C1r00003w47NVEAY', 'a0Cw000001GNm6qEAD', 'a0C6900004O0WqtEAF', 'a0C6900004DiveKEAR', 'a0C1r00003xRltxEAC')) THEN 'False'
     ELSE 'True'
-END AS InScope,
+END AS InScope,*/
 
-acc.Id as Recipient_Id, /*OK*/
-acc.Email__c as Recipient_Email, /*OK*/
-acc.AccountNumber as Recipient_AccountNumber, /*OK*/
-acc.TemplateLanguage__c as Recipient_Language, /*LocaleSidKey__c => TemplateLanguage__c*/
-/*rol.OrderRole__c as OrderRole_OrderRole__c, /*Maybe free to delete*/*/
-acc.Name as Account_Name, /*OrderRole: Name => Account: Name, take name from Account*/
-case 
-	when left(rol.MobilePhone__c,2) = '00' /*Take from Account*/
-		then
-		replace(substring(rol.MobilePhone__c,3,len(rol.MobilePhone__c) - 2),' ','') /*Take from Account*/
-	when left(rol.MobilePhone__c,1) = '0' /*Take from Account*/
-		then
-		replace(substring(rol.MobilePhone__c,2,len(rol.MobilePhone__c) - 1),' ','')/*Take from Account*/
-	when left(rol.MobilePhone__c,1) = '+' /*Take from Account*/
-		then
-		replace(substring(rol.MobilePhone__c,2,len(rol.MobilePhone__c) - 1),' ','') /*Take from Account*/
-	else
-		rol.MobilePhone__c /*Take from Account*/
-end as OrderRole_MobilePhone__c, /*Take from Account*/
-rol.Street__c as OrderRole_Street__c, /*Take address from Asset Location or Service Appointment?*/
-rol.HouseNo__c as OrderRole_HouseNo__c, /*Take address from Asset Location or Service Appointment?*/
-rol.Floor__c as OrderRole_Floor__c, /*Take address from Asset Location or Service Appointment?*/
-rol.FlatNo__c as OrderRole_FlatNo__c, /*Take address from Asset Location or Service Appointment?*/
-rol.PostalCode__c as OrderRole_PostalCode__c, /*Take address from Asset Location or Service Appointment?*/
-rol.City__c as OrderRole_City__c, /*Take address from Asset Location or Service Appointment?*/
+acc.Id as Recipient_Id,
+acc.IsPersonAccount as Recipient_PersonAccount,
+acc.FirstName as Recipient_FirstName,
+acc.LastName as Recipient_LastName,
+acc.PersonEmail as Recipient_Email, 
+acc.AccountNumber as Recipient_AccountNumber,
+acc.TemplateLanguage__c as Recipient_Language,
+acc.PersonMobilePhone as Recipient_MobilePhone,
 
-ass.Name as Assignment_Name, /*?*/
-ROW_NUMBER ( ) OVER ( PARTITION BY app.Id ORDER BY app.FSL_Scheduled_Start__c ASC ) AS RowNumber, /*Start__c => FSL_Scheduled_Start__c*/
-Dense_Rank() OVER (PARTITION BY acc.Id, loc.Street /*Take Street from Location*/, rol.MobilePhone__c /*Take mobile from Account*/, acc.Email__c ORDER BY app.ActualStartTime /*Start__c => ActualStartTime*/ASC) AS AmountOfAppointments
+asset.Brand__c as Asset_Brand,
 
+ROW_NUMBER () OVER (PARTITION BY acc.Id ORDER BY app.FSL_Scheduled_Start__c ASC ) AS RowNumber
 
-FROM ENT.WorkOrder_Salesforce ord /*SCOrder__c to Work Order*/
-
-INNER JOIN ENT.ServiceAppointment_Salesforce app on ord.Id = app.FSL_Work_Order__c /*Order__c => FSL_Work_Order__c*/
-LEFT JOIN ENT.ServiceContract_Salesforce_4 con on ord.ServiceContractId = con.Id /*Contract__c => ServiceContractId*/
-LEFT JOIN ENT.Account_Salesforce_21 acc on ord.AccountId = acc.Id /*We take recipient info from Account object instead of OrderRole object, Account__c => Work Order: AccountId*/
-LEFT JOIN ENT.SCAssignment__c_Salesforce_2 ass on ord.Id = ass.Order__c 
-LEFT JOIN ENT.Asset_Salesforce_5 asset on asset.Id = ord.AssetId /*SCInstalledBase__c => Asset, we take brand on Asset*/
-LEFT JOIN ENT.Location_Salesforce loc on ass.LocationId = loc.Id /*Linking the Location object to Asset, will get address info etc from Location instead of OrderRole object */
+FROM ENT.WorkOrder_Salesforce ord
+INNER JOIN ENT.ServiceAppointment_Salesforce app on ord.Id = app.FSL_Work_Order__c
+LEFT JOIN ENT.ServiceContract_Salesforce_4 con on ord.ServiceContractId = con.Id
+LEFT JOIN ENT.Account_Salesforce_21 acc on ord.AccountId = acc.Id
+LEFT JOIN ENT.Asset_Salesforce_5 asset on asset.Id = ord.AssetId 
 
 WHERE
+/*convert(int,dateadd(day,convert(float,getdate()), 0))=convert(int,app.FSL_Scheduled_Start__c)*/
+app.Country = 'Belgium'
+AND ord.Status = 'In Progress'
+AND acc.TemplateLanguage__c IN ('FR', 'NL')
+AND app.Status != 'Cancelled'
 
-convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.FSL_Scheduled_Start__c) /*Start__c => FSL_Scheduled_Start__c*/
-AND app.Country = 'BE' /*Country__c => Country*/
-AND res.Name NOT LIKE 'Dummy%'
-AND ord.Status = 'In Progress' /*Status__c => Status, old values ('5502', '5503', '5509', '5510') all become 'In Progress' value, check Excel mapping field*/
-AND app.Status != '5507' /*AssignmentStatus__c => Status, check values see Excel*/
-
-ORDER BY app.ActualStartTime ASC /*Start__c => ActualStartTime*/
+ORDER BY app.ActualStartTime ASC
 
 )
 AS Sub
-WHERE RowNumber = 1
-AND AmountOfAppointments = 1
