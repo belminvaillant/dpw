@@ -45,12 +45,12 @@ Assignment_Name
 FROM 
 (SELECT TOP 5000
 app.Id as Appointment_Id,
-app.ParentRecordId as Appointment_Order__c, /*Order__c => ParentRecordId*/
+app.FSL_Work_Order__c as Appointment_Order__c, /*Order__c => FSL_Work_Order__c*/
 app.Country as Appointment_Country__c, /*Country__c => Country*/
-convert(varchar, app.ActualEndTime, 103) as StartDay, /*End__c = > ActualEndTime*/
-convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.ActualStartTime))) as StartTime, /*Start__c => ActualStartTime*/
-convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.ActualEndTime))) as EndTime, /*End__c = > ActualEndTime*/
-app.ActualStartTime as Appointment_Start__c, /*Start__c => ActualStartTime*/
+convert(varchar, app.FSL_Scheduled_End__c, 103) as StartDay, /*End__c = > ActualEndTime*/
+convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.FSL_Scheduled_Start__c))) as StartTime, /*Start__c => FSL_Scheduled_Start__c*/
+convert(varchar(5),CONVERT(time, CONVERT(varchar,CONVERT(date, getdate()))+ DATEADD(hh, 8, app.FSL_Scheduled_End__c))) as EndTime, /*End__c = > ActualEndTime*/
+app.FSL_Scheduled_Start__c as Appointment_Start__c, /*Start__c => FSL_Scheduled_Start__c*/
 app.TimeWindow__c as Appointment_TimeWindow__c, /*If no direct field => Take ActualStart Time and ActualEndTime*/
 app.Status as Appointment_AssignmentStatus__c, /*AssignmentStatus__c => Status*/
 
@@ -98,22 +98,22 @@ rol.PostalCode__c as OrderRole_PostalCode__c, /*Take address from Asset Location
 rol.City__c as OrderRole_City__c, /*Take address from Asset Location or Service Appointment?*/
 
 ass.Name as Assignment_Name, /*?*/
-ROW_NUMBER ( ) OVER ( PARTITION BY app.Id ORDER BY app.ActualStartTime ASC ) AS RowNumber, /*Start__c => ActualStartTime*/
+ROW_NUMBER ( ) OVER ( PARTITION BY app.Id ORDER BY app.FSL_Scheduled_Start__c ASC ) AS RowNumber, /*Start__c => FSL_Scheduled_Start__c*/
 Dense_Rank() OVER (PARTITION BY acc.Id, loc.Street /*Take Street from Location*/, rol.MobilePhone__c /*Take mobile from Account*/, acc.Email__c ORDER BY app.ActualStartTime /*Start__c => ActualStartTime*/ASC) AS AmountOfAppointments
 
 
-FROM ENT.WorkOrder ord /*SCOrder__c to Work Order*/
+FROM ENT.WorkOrder_Salesforce ord /*SCOrder__c to Work Order*/
 
-INNER JOIN ENT.ServiceAppointment app on ord.Id = app.ParentRecordId /*Order__c => ParentRecordId*/
-LEFT JOIN ENT.ServiceContract con on ord.ServiceContractId = con.Id /*Contract__c => ServiceContractId*/
-LEFT JOIN ENT.Account acc on ord.AccountId = acc.Id /*We take recipient info from Account object instead of OrderRole object, Account__c => Work Order: AccountId*/
-LEFT JOIN ENT.SCAssignment__c_Salesforce_2 ass on ord.Id = ass.Order__c
-LEFT JOIN ENT.Asset asset on asset.Id = ord.AssetId /*SCInstalledBase__c => Asset, we take brand on Asset*/
-LEFT JOIN ENT.Location loc on ass.LocationId = loc.Id /*Linking the Location object to Asset, will get address info etc from Location instead of OrderRole object */
+INNER JOIN ENT.ServiceAppointment_Salesforce app on ord.Id = app.FSL_Work_Order__c /*Order__c => FSL_Work_Order__c*/
+LEFT JOIN ENT.ServiceContract_Salesforce_4 con on ord.ServiceContractId = con.Id /*Contract__c => ServiceContractId*/
+LEFT JOIN ENT.Account_Salesforce_21 acc on ord.AccountId = acc.Id /*We take recipient info from Account object instead of OrderRole object, Account__c => Work Order: AccountId*/
+LEFT JOIN ENT.SCAssignment__c_Salesforce_2 ass on ord.Id = ass.Order__c 
+LEFT JOIN ENT.Asset_Salesforce_5 asset on asset.Id = ord.AssetId /*SCInstalledBase__c => Asset, we take brand on Asset*/
+LEFT JOIN ENT.Location_Salesforce loc on ass.LocationId = loc.Id /*Linking the Location object to Asset, will get address info etc from Location instead of OrderRole object */
 
 WHERE
 
-convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.ActualStartTime) /*Start__c => ActualStartTime*/
+convert(int,dateadd(day,convert(float,getdate()), 1))=convert(int,app.FSL_Scheduled_Start__c) /*Start__c => FSL_Scheduled_Start__c*/
 AND app.Country = 'BE' /*Country__c => Country*/
 AND res.Name NOT LIKE 'Dummy%'
 AND ord.Status = 'In Progress' /*Status__c => Status, old values ('5502', '5503', '5509', '5510') all become 'In Progress' value, check Excel mapping field*/
