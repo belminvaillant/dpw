@@ -20,8 +20,6 @@ SR_LastName,
 Brand,
 VAT_Value_Percent,
 Total_Price_EUR,
-ContractDuration, /*tbv*/
-ContractDuration_2, /*tbv*/
 ContractType_NotTranslated,
 ContractStatus,
 ContractType,
@@ -77,9 +75,7 @@ acc2.LastName as SR_LastName,
 scc.Brand__c as Brand, /*Doesn"t exist in FSL, take from Asset*/
 scc.DescriptionSpecialTerms__c as VAT_Value_Percent,
 scc.DescriptionInternal__c as Total_Price_EUR,
-scc.MaintenanceDuration__c as ContractDuration, /*tbv*/
-scc.util_MaintenanceDuration__c as ContractDuration_2, /*tbv*/
-scc.util_templatedetails__c as ContractType_NotTranslated,
+scc.Name as ContractType_NotTranslated, /*util_templatedetails__c => Name*/
 scc.Status as ContractStatus, /*Status__c => Status*/
 scc.StartDate__c as StartDate, /*StartDate__c => StartDate*/
 datepart(day,scc.StartDate) as Start_Day, /*StartDate__c => StartDate*/
@@ -159,7 +155,7 @@ INNER JOIN ENT.Asset asset on asset.id = sci.AssetId /*SCInstalledBase__c object
 INNER JOIN ENT.Location loc on loc.id = asset.LocationId
 INNER JOIN ENT.Account_Salesforce_2 acc2 on scc.Account__c = acc2.Id
 
-WHERE scc.Status = 'suspended' /*Status__c => Status, check values*/
+WHERE scc.Status = 'suspended' /*Status__c => Status, new values are "Inactive", "Active", "Expired"*/
 and (scc.CreatedById = '005w0000004NnjNAAS' or scc.CreatedById = '005w0000006RcbOAAS') /*Two API users*/
 and datepart(day,scc.ConclusionDate__c) = datepart(day,getdate())
 and datepart(month,scc.ConclusionDate__c) = datepart(month,getdate())
